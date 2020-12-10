@@ -12,8 +12,8 @@ DOCUMENTATION_PATH = docs
 DOXYGEN_CONFIGURATION_FILE_NAME = Doxyfile
 
 # Executable file name 
-BIN_NAME = #NETCP
-TEST_NAME = #NETCP_TEST	
+BIN_NAME = netcp
+TEST_NAME = netcp_test	
 
 # File extentions
 SRC_EXT = cpp
