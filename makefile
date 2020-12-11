@@ -12,8 +12,9 @@ DOCUMENTATION_PATH = docs
 DOXYGEN_CONFIGURATION_FILE_NAME = Doxyfile
 
 # Executable file name 
-BIN_NAME = netcp
-TEST_NAME = netcp_test	
+SEND_BIN_NAME = netcp_send
+RECEIVE_BIN_NAME = netcp_receive
+TEST_NAME = netcp	
 
 # File extentions
 SRC_EXT = cpp
@@ -21,11 +22,12 @@ LIB_EXT = hpp
 
 
 # Source files lists 
-SOURCES = $(shell find $(SRC_PATH) -name '*.$(SRC_EXT)'  | sort -k 1nr | cut -f2-)
-TEST_SOURCES = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(BIN_NAME)*' \) | sort -k 1nr | cut -f2-)
+SOURCES_OF_SEND = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(RECEIVE_BIN_NAME)*' ! -iname 'includer.test.cpp' \) | sort -k 1nr | cut -f2-)
+SOURCES_OF_RECEIVE = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(SEND_BIN_NAME)*' ! -iname 'includer.test.cpp' \) | sort -k 1nr | cut -f2-)
+TEST_SOURCES = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(SEND_BIN_NAME)*' ! -iname '$(RECEIVE_BIN_NAME)*' \) | sort -k 1nr | cut -f2-)
 
 # Object files naming
-OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o) 
+# OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o) 
 # Dependancy files naming
 DEPS = $(OBJECTS:.o=.d)
 
@@ -52,7 +54,8 @@ dirs:
 .PHONY: clean
 clean:
 	@echo "Deleting $(BIN_NAME) symlink"
-	@$(RM) $(BIN_NAME)
+	@$(RM) $(SEND_BIN_NAME)
+	@$(RM) $(RECEIVE_BIN_NAME)
 	@$(RM) $(TEST_NAME)
 	@echo "Deleting directories"
 	@$(RM) -r $(BUILD_PATH)
@@ -87,4 +90,9 @@ test:
 	$(CXX) -o $(TEST_NAME) $(TEST_SOURCES) 
 	./$(TEST_NAME) 
 
-
+send:
+	@echo "Making netcp send program: $(SEND_BIN_NAME)"
+	$(CXX) -o $(SEND_BIN_NAME) $(SOURCES_OF_SEND)  
+receive:
+	@echo "Making netcp RECEIVE program: $(RECEIVE_BIN_NAME)"
+	$(CXX) -o $(RECEIVE_BIN_NAME) $(SOURCES_OF_RECEIVE) 
