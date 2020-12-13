@@ -14,7 +14,7 @@ DOXYGEN_CONFIGURATION_FILE_NAME = Doxyfile
 # Executable file name 
 SEND_BIN_NAME = netcp_send
 RECEIVE_BIN_NAME = netcp_receive
-TEST_NAME = netcp	
+TEST_NAME = netcp_test	
 
 # File extentions
 SRC_EXT = cpp
