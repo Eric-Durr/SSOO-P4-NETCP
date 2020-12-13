@@ -1,22 +1,22 @@
 #include "../include/socket.hpp"
 
-Socket::Socket(const sockaddr_in &adress) : bind_status_(-1)
+Socket::Socket(const sockaddr_in &adress)
 {
     sock_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sock_fd_ >= 0)
     {
-        bind_status_ = bind(sock_fd_,
-                            reinterpret_cast<const sockaddr *>(&adress),
-                            sizeof(adress));
-        if (bind_status_ < 0)
+        int result = bind(sock_fd_,
+                          reinterpret_cast<const sockaddr *>(&adress),
+                          sizeof(adress));
+        if (result < 0)
         {
-            std::cerr << "bind failed: " << std::strerror(errno) << '\n';
+            throw std::system_error(errno, std::system_category(), "unable to create socket: ");
         }
     }
     else
     {
-        std::cerr << "unable to create socket: " << std::strerror(errno) << '\n';
+        throw std::system_error(errno, std::system_category(), "failed bind : ");
     }
 }
 Socket::~Socket()
@@ -31,7 +31,7 @@ void Socket::send_to(const Message &message, const sockaddr_in &address)
                         sizeof(address));
     if (result < 0)
     {
-        std::cerr << "failed sendto: " << std::strerror(errno) << '\n';
+        throw std::system_error(errno, std::system_category(), "failed sendto: ");
     }
 }
 void Socket::receive_from(Message &message, sockaddr_in &address)
@@ -43,6 +43,6 @@ void Socket::receive_from(Message &message, sockaddr_in &address)
                           &src_len);
     if (result < 0)
     {
-        std::cerr << "failed recvfrom: " << std::strerror(errno) << '\n';
+        throw std::system_error(errno, std::system_category(), "failed recvfrom: ");
     }
 }

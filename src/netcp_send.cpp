@@ -1,39 +1,74 @@
 #include <iostream>
 #include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "../include/command_line_tools.hpp"
-#include "socket.hpp"
+#include "../include/socket.hpp"
+#include "../include/file.hpp"
+
+int protected_main(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-    int status = handle_entrace(argc, argv);
-
-    if (status == -1)
+    try
     {
-        /* Set an address */
-        sockaddr_in sock_addr;
+        return protected_main(argc, argv);
+    }
+    catch (std::bad_alloc &e)
+    {
+        std::cerr << "netcp_send: "
+                  << "Not enough memory\n";
+        return 1;
+    }
+    catch (std::system_error &e)
+    {
+        std::cerr << "netcp_send: " << e.what() << "\n";
+        return 2;
+    }
+    catch (...)
+    {
+        std::cout << "Unknown error\n";
+        return 99;
+    }
+}
 
-        if (argc == 3) // default IP adress option
-        {
-            sock_addr = make_ip_address(atoi(argv[1]), "");
-        }
+int protected_main(int argc, char *argv[])
+{
 
-        if (argc == 4) // specified IP adress option
-        {
-            sock_addr = make_ip_address(atoi(argv[1]), argv[2]);
-        }
+    /* Set addresses */
+    sockaddr_in local_sock_addr = make_ip_address(8081, "127.0.0.1");
+    sockaddr_in exter_sock_addr = make_ip_address(8080, "127.0.0.1");
 
-        /* open file */
+    /* Message buffer */
+    std::string buffer_str;
 
-        /* read file and create message */
+    /* Message structure */
+    Message file_msg;
 
-        /* create socket */
-        Socket my_socket(sock_addr);
+    /* File oppenning */
+    File local_file(argv[1], O_RDONLY);
+
+    /* create socket */
+    Socket my_socket(local_sock_addr);
+
+    /* read file and create message */
+    int bytes_read = -1;
+    while (bytes_read != 0)
+    {
+        bytes_read = local_file.read_file(buffer_str);
+    }
+    if (!buffer_str.empty())
+    {
+        buffer_str.copy(
+            file_msg.text.data(),
+            file_msg.text.size() - 1,
+            0);
 
         /* send message */
-
-        return 0;
+        my_socket.send_to(file_msg, exter_sock_addr);
     }
 
-    return status;
+    return 0;
 }
