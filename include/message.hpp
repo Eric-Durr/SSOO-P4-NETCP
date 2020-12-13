@@ -5,7 +5,7 @@
 struct Message
 {
     std::array<char, 1024> text;
-    /* more data */
+    size_t size;
 };
 
 #endif /* MESSAGE_H_ */

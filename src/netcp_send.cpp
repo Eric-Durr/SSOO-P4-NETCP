@@ -54,21 +54,24 @@ int protected_main(int argc, char *argv[])
     Socket my_socket(local_sock_addr);
 
     /* read file and create message */
-    int bytes_read = -1;
-    while (bytes_read != 0)
+    size_t bytes_read = 0;
+    do
     {
         bytes_read = local_file.read_file(buffer_str);
-    }
-    if (!buffer_str.empty())
-    {
-        buffer_str.copy(
-            file_msg.text.data(),
-            file_msg.text.size() - 1,
-            0);
+        if (bytes_read > 0)
+        {
+            if (!buffer_str.empty())
+            {
+                buffer_str.copy(
+                    file_msg.text.data(),
+                    file_msg.text.size() - 1,
+                    0);
 
-        /* send message */
-        my_socket.send_to(file_msg, exter_sock_addr);
-    }
+                /* send message */
+                my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
+            }
+        }
+    } while (bytes_read > 0);
 
     return 0;
 }

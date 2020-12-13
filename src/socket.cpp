@@ -24,9 +24,9 @@ Socket::~Socket()
     close(sock_fd_);
 }
 
-void Socket::send_to(const Message &message, const sockaddr_in &address)
+void Socket::send_to(const Message &message, const size_t &msg_sz, const sockaddr_in &address)
 {
-    int result = sendto(sock_fd_, &message, sizeof(message), 0,
+    int result = sendto(sock_fd_, &message, msg_sz, 0,
                         reinterpret_cast<const sockaddr *>(&address),
                         sizeof(address));
     if (result < 0)

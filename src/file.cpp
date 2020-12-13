@@ -15,13 +15,13 @@ File::~File()
 
 int File::read_file(std::string &buffer)
 {
-    char c_buffer[1024];
-    int result = read(fd_, &c_buffer, sizeof(c_buffer));
+    int result = read(fd_, &buffer_, sizeof(buffer_));
     if (result < 0)
     {
         throw std::system_error(errno, std::system_category(), "file can't be read: ");
     }
+    buffer = buffer_;
 
-    buffer = c_buffer;
+    std::cout << (buffer.empty() ? "empty\n" : buffer + "\n");
     return result;
 }

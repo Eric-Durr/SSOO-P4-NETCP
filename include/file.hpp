@@ -11,6 +11,13 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define _1KB_ 1024
+#define _2KB_ 2048
+#define _4KB_ 4096
+#define _8KB_ 8192
+#define _16KB_ 16384
+#define _32KB_ 32768
+
 class File
 {
 public:
@@ -27,6 +34,7 @@ public:
 
 private:
     int fd_;
+    char buffer_[_32KB_];
 };
 
 #endif // FILE_HPP_
