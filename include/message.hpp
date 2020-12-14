@@ -4,7 +4,7 @@
 
 struct Message
 {
-    std::array<char, 1024> text;
+    std::array<char, 4096> text;
     size_t size;
 };
 

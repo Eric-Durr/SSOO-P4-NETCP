@@ -45,6 +45,7 @@ int protected_main(int argc, char *argv[])
     std::string buffer_str;
 
     /* Message structure */
+
     Message file_msg;
 
     /* File oppenning */
@@ -58,6 +59,7 @@ int protected_main(int argc, char *argv[])
     do
     {
         bytes_read = local_file.read_file(buffer_str);
+
         if (bytes_read > 0)
         {
             if (!buffer_str.empty())
@@ -69,9 +71,13 @@ int protected_main(int argc, char *argv[])
 
                 /* send message */
                 my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
+                std::cout << "_" << std::endl;
+                std::cout << file_msg.text.data() << std::endl;
+                std::cout << "_" << std::endl;
+                file_msg.text[0] = '\0';
             }
         }
-    } while (bytes_read > 0);
+    } while (bytes_read != 0);
 
     return 0;
 }

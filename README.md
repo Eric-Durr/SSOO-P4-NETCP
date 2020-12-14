@@ -18,17 +18,20 @@ e-mail: eric.durr.20@ull.edu.es
 
 ## Project commands
 
-- ```$ make``` or ```$ make compile``` -> program compilation.
+- ```$ make send``` -> send side program compilation.
+- ```$ make receive``` -> receive side program compilation.
 - ```$ make test``` -> compilation and execution for the project tests.
 - ```$ make clean``` -> Deleting the builded program and executable files. 
+
+## Running the program
+- ```$ ./netcp_receive``` -> running endlessly the receiver program.
+- ```$ ./netcp_send [filename]``` -> filename to send must be indicated as argument.
+
 
 ## Project tools
 
 - [Doxygen](https://www.doxygen.nl/index.html) -> documentation tool
 - [Catch2](https://github.com/catchorg) -> Librería para el desarrollo BDD (Behavior Driven Development) con C++
-
-
-## References
 
 
 ## [Documentation online view](#)

@@ -15,13 +15,12 @@ File::~File()
 
 int File::read_file(std::string &buffer)
 {
-    int result = read(fd_, &buffer_, sizeof(buffer_));
+    int result = read(fd_, buffer_, sizeof(buffer_));
     if (result < 0)
     {
         throw std::system_error(errno, std::system_category(), "file can't be read: ");
     }
-    buffer = buffer_;
+    buffer = std::string{buffer_};
 
-    std::cout << (buffer.empty() ? "empty\n" : buffer + "\n");
     return result;
 }
