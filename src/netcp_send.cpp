@@ -65,12 +65,10 @@ int protected_main(int argc, char *argv[])
             if (!buffer_str.empty())
             {
 
-                std::size_t length = buffer_str.copy(
+                buffer_str.copy(
                     file_msg.text.data(),
                     file_msg.text.size() - 1,
                     0);
-                file_msg.text[buffer_str.size() - 1] = '\0';
-                std::cout << file_msg.text.data();
                 /* send message */
                 my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
             }

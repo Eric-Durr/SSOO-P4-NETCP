@@ -28,6 +28,7 @@ void Socket::send_to(Message &message, const size_t &msg_sz, const sockaddr_in &
 {
     message.text[msg_sz] = '\0';
 
+    std::cout << message.text.data() << "\n";
     int result = sendto(sock_fd_, &message, msg_sz, 0,
                         reinterpret_cast<const sockaddr *>(&address),
                         sizeof(address));
@@ -36,6 +37,7 @@ void Socket::send_to(Message &message, const size_t &msg_sz, const sockaddr_in &
         throw std::system_error(errno, std::system_category(), "failed sendto: ");
     }
 }
+
 void Socket::receive_from(Message &message, sockaddr_in &address)
 {
     socklen_t src_len = (sizeof(address));
