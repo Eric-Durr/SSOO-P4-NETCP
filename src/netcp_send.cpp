@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../include/command_line_tools.hpp"
+//#include "../include/command_line_tools.hpp"
 #include "../include/socket.hpp"
 #include "../include/file.hpp"
 
@@ -36,6 +36,13 @@ int main(int argc, char *argv[])
 
 int protected_main(int argc, char *argv[])
 {
+    char *program_name = basename(argv[0]);
+
+    if (argc != 2)
+    {
+        std::cerr << "Usage: " << program_name << " [file]\n";
+        return 1;
+    }
 
     /* Set addresses */
     sockaddr_in local_sock_addr = make_ip_address(8081, "127.0.0.1");

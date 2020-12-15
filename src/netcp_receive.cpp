@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../include/command_line_tools.hpp"
+//#include "../include/command_line_tools.hpp"
 #include "../include/socket.hpp"
 
 int protected_main(int argc, char *argv[]);

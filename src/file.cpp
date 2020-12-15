@@ -7,9 +7,26 @@ File::File(const std::string &filename, int flag)
     {
         throw std::system_error(errno, std::system_category(), "file " + filename + " didn't open: ");
     }
+    length_ = lseek(fd_, 0, SEEK_END);
+    mmapped_file_ = mmap(
+        nullptr,
+        length_,
+        PROT_READ,
+        MAP_SHARED,
+        fd_,
+        0);
+    if (mmapped_file_ == MAP_FAILED)
+    {
+        throw std::system_error(errno, std::system_category(), "memroy map failed: ");
+    }
 }
 File::~File()
 {
+    int result = munmap(mmapped_file_, length_);
+    if (result < 0)
+    {
+        throw std::system_error(errno, std::system_category(), "memory unmap failed: ");
+    }
     close(fd_);
 }
 

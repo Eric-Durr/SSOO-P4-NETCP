@@ -1,4 +1,4 @@
-#include <iostream>
+/* #include <iostream>
 #include "../include/command_line_tools.hpp"
 
 void usage(void)
@@ -9,7 +9,6 @@ void usage(void)
 
 void help(void)
 {
-    /* help mesage here */
 }
 
 int handle_entrace(int argc, char *argv[])
@@ -55,4 +54,4 @@ bool match_ip_addr(const std::string &str_ip_addr)
     return std::regex_match(str_ip_addr,
                             std::regex("(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.)"
                                        "{3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])"));
-}
+} */
