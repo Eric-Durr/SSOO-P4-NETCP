@@ -55,7 +55,7 @@ int protected_main(int argc, char *argv[])
     Socket my_socket(local_sock_addr);
 
     /* read file and create message */
-    size_t bytes_read = 0;
+    std::size_t bytes_read = 0;
     do
     {
         bytes_read = local_file.read_file(buffer_str);
@@ -64,17 +64,15 @@ int protected_main(int argc, char *argv[])
         {
             if (!buffer_str.empty())
             {
-                buffer_str.copy(
+
+                std::size_t length = buffer_str.copy(
                     file_msg.text.data(),
                     file_msg.text.size() - 1,
                     0);
-
+                file_msg.text[buffer_str.size() - 1] = '\0';
+                std::cout << file_msg.text.data();
                 /* send message */
                 my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
-                std::cout << "_" << std::endl;
-                std::cout << file_msg.text.data() << std::endl;
-                std::cout << "_" << std::endl;
-                file_msg.text[0] = '\0';
             }
         }
     } while (bytes_read != 0);

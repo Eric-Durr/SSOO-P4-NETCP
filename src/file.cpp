@@ -10,17 +10,18 @@ File::File(const std::string &filename, int flag)
 }
 File::~File()
 {
-    int result = close(fd_);
+    close(fd_);
 }
 
 int File::read_file(std::string &buffer)
 {
     int result = read(fd_, buffer_, sizeof(buffer_));
+    buffer_[result] = '\0';
     if (result < 0)
     {
         throw std::system_error(errno, std::system_category(), "file can't be read: ");
     }
+    buffer.resize(sizeof(buffer_));
     buffer = std::string{buffer_};
-
     return result;
 }

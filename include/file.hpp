@@ -34,7 +34,7 @@ public:
 
 private:
     int fd_;
-    char buffer_[_32KB_];
+    char buffer_[_1KB_];
 };
 
 #endif // FILE_HPP_

@@ -24,8 +24,10 @@ Socket::~Socket()
     close(sock_fd_);
 }
 
-void Socket::send_to(const Message &message, const size_t &msg_sz, const sockaddr_in &address)
+void Socket::send_to(Message &message, const size_t &msg_sz, const sockaddr_in &address)
 {
+    message.text[msg_sz] = '\0';
+
     int result = sendto(sock_fd_, &message, msg_sz, 0,
                         reinterpret_cast<const sockaddr *>(&address),
                         sizeof(address));
@@ -41,6 +43,7 @@ void Socket::receive_from(Message &message, sockaddr_in &address)
     int result = recvfrom(sock_fd_, &message, sizeof(message), 0,
                           reinterpret_cast<sockaddr *>(&address),
                           &src_len);
+    message.text[result] = '\0';
     if (result < 0)
     {
         throw std::system_error(errno, std::system_category(), "failed recvfrom: ");

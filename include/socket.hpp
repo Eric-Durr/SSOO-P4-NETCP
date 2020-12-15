@@ -21,7 +21,7 @@ public:
     const int &fd(void) const { return sock_fd_; }
     int &fd(void) { return sock_fd_; }
 
-    void send_to(const Message &message, const size_t &msg_sz, const sockaddr_in &address);
+    void send_to(Message &message, const size_t &msg_sz, const sockaddr_in &address);
     void receive_from(Message &message, sockaddr_in &address);
 
 private:
