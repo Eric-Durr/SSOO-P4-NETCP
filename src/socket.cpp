@@ -26,9 +26,8 @@ Socket::~Socket()
 
 void Socket::send_to(Message &message, const size_t &msg_sz, const sockaddr_in &address)
 {
-    message.text[msg_sz] = '\0';
+    message.text[msg_sz - 1] = '\0';
 
-    std::cout << message.text.data() << "\n";
     int result = sendto(sock_fd_, &message, msg_sz, 0,
                         reinterpret_cast<const sockaddr *>(&address),
                         sizeof(address));

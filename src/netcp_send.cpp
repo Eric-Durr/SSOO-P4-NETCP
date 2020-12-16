@@ -66,8 +66,7 @@ int protected_main(int argc, char *argv[])
     do
     {
         bytes_read = local_file.read_file(buffer_str);
-
-        if (bytes_read > 0)
+        if (bytes_read != 0)
         {
             if (!buffer_str.empty())
             {
@@ -76,6 +75,7 @@ int protected_main(int argc, char *argv[])
                     file_msg.text.data(),
                     file_msg.text.size() - 1,
                     0);
+                std::cout << file_msg.text.data() << "\n";
                 /* send message */
                 my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
             }
