@@ -63,24 +63,19 @@ int protected_main(int argc, char *argv[])
 
     /* read file and create message */
     std::size_t bytes_read = 0;
-    do
+    for (size_t i = 0; i < local_file.length(); i += file_msg.text.size())
     {
-        bytes_read = local_file.read_file(buffer_str);
-        if (bytes_read != 0)
-        {
-            if (!buffer_str.empty())
-            {
+        buffer_str = static_cast<char *>(local_file.region() + i);
 
-                buffer_str.copy(
-                    file_msg.text.data(),
-                    file_msg.text.size() - 1,
-                    0);
-                std::cout << file_msg.text.data() << "\n";
-                /* send message */
-                my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
-            }
-        }
-    } while (bytes_read != 0);
+        buffer_str.copy(
+            file_msg.text.data(),
+            file_msg.text.size() - 1,
+            0);
+        std::cout << file_msg.text.data() << "\n";
+        file_msg.text[0] = '\0';
+        /* send message */
+        //my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
+    }
 
     return 0;
 }
