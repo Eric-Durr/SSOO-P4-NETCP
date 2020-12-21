@@ -46,7 +46,10 @@ int protected_main(int argc, char *argv[])
     {
         std::cout << "Waiting for response ..." << std::flush;
         my_socket.receive_from(file_msg, exter_sock_addr);
-
+        //std::cout << "\n File received: \n"
+        //          << file_msg.file_name << "\n";
+        //std::cout << "\n File size: \n"
+        //          << file_msg.file_size << "\n";
         std::cout << "\n Data received: \n"
                   << std::string{file_msg.text.data()} << "\n";
     }

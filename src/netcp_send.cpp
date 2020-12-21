@@ -50,6 +50,7 @@ int protected_main(int argc, char *argv[])
 
     /* Message buffer */
     std::string buffer_str;
+    //char *buffer_str[_1KB_];
 
     /* Message structure */
 
@@ -58,24 +59,36 @@ int protected_main(int argc, char *argv[])
     /* File oppenning */
     File local_file(argv[1], O_RDONLY);
 
+    file_msg.file_name = argv[1];
+    file_msg.file_size = local_file.length();
     /* create socket */
     Socket my_socket(local_sock_addr);
 
-    /* read file and create message */
-    std::size_t bytes_read = 0;
-    for (size_t i = 0; i < local_file.length(); i += file_msg.text.size())
-    {
-        buffer_str = static_cast<char *>(local_file.region() + i);
+    /* Sending file metadata for creation*/
 
-        buffer_str.copy(
-            file_msg.text.data(),
-            file_msg.text.size() - 1,
-            0);
-        std::cout << file_msg.text.data() << "\n";
-        file_msg.text[0] = '\0';
-        /* send message */
-        //my_socket.send_to(file_msg, bytes_read, exter_sock_addr);
+    /* Sending memory mapped file content*/
+    size_t i = 0;
+    while (static_cast<char *>(local_file.region())[i] != '\0')
+    {
+        buffer_str.push_back(static_cast<char *>(local_file.region())[i]);
+        if ((buffer_str.size() >= _1KB_) ||
+            (static_cast<char *>(local_file.region())[i + 1] == '\0'))
+        {
+            buffer_str.copy(
+                file_msg.text.data(),
+                file_msg.text.size() - 1,
+                0);
+            my_socket.send_to(file_msg, buffer_str.size() - 1, exter_sock_addr);
+            buffer_str.resize(0);
+        }
+
+        i++;
     }
+    //std::cout << file_msg.text.data() << "\n";
+    //std::cout << "times entered:" << i / _1KB_ << "\n";
+
+    /* send message */
+    // my_socket.send_to(file_msg, file_msg.text.size() - 1, exter_sock_addr);
 
     return 0;
 }
