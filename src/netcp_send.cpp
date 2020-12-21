@@ -59,18 +59,27 @@ int protected_main(int argc, char *argv[])
     /* File oppenning */
     File local_file(argv[1], O_RDONLY);
 
-    file_msg.file_name = argv[1];
+    *file_msg.file_name = static_cast<char *>(argv[1]);
     file_msg.file_size = local_file.length();
+
     /* create socket */
     Socket my_socket(local_sock_addr);
-
-    /* Sending file metadata for creation*/
 
     /* Sending memory mapped file content*/
     size_t i = 0;
     while (static_cast<char *>(local_file.region())[i] != '\0')
     {
+        file_msg.msg_id = i;
         buffer_str.push_back(static_cast<char *>(local_file.region())[i]);
+
+        /* Sending file metadata for creation*/
+        if (i == 0)
+        {
+            my_socket.send_to(file_msg,
+                              file_msg.text.size() - 1,
+                              exter_sock_addr);
+        }
+
         if ((buffer_str.size() >= _1KB_) ||
             (static_cast<char *>(local_file.region())[i + 1] == '\0'))
         {
@@ -78,17 +87,18 @@ int protected_main(int argc, char *argv[])
                 file_msg.text.data(),
                 file_msg.text.size() - 1,
                 0);
-            my_socket.send_to(file_msg, buffer_str.size() - 1, exter_sock_addr);
+            my_socket.send_to(
+                file_msg,
+                buffer_str.size(),
+                exter_sock_addr);
             buffer_str.resize(0);
         }
 
         i++;
     }
-    //std::cout << file_msg.text.data() << "\n";
-    //std::cout << "times entered:" << i / _1KB_ << "\n";
-
-    /* send message */
-    // my_socket.send_to(file_msg, file_msg.text.size() - 1, exter_sock_addr);
+    /* terminate message */
+    file_msg.msg_id = -2;
+    my_socket.send_to(file_msg, sizeof(file_msg), exter_sock_addr);
 
     return 0;
 }

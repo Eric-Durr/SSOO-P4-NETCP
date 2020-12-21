@@ -28,7 +28,7 @@ void Socket::send_to(Message &message, const size_t &msg_sz, const sockaddr_in &
 {
     message.text[msg_sz - 1] = '\0';
 
-    int result = sendto(sock_fd_, &message, msg_sz, 0,
+    int result = sendto(sock_fd_, &message, sizeof(message), 0,
                         reinterpret_cast<const sockaddr *>(&address),
                         sizeof(address));
     if (result < 0)

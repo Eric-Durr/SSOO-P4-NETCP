@@ -23,7 +23,8 @@
 class File
 {
 public:
-    File(const std::string &filename, int flag /* , int size */);
+    File(const std::string &filename, int flag, int sz = -1);
+
     ~File();
 
     const int &fd(void) const { return fd_; }
@@ -38,8 +39,13 @@ public:
     const int &length(void) const { return length_; }
     int &length(void) { return length_; }
 
+    void resize(int length);
+
     int read_file(std::string &buffer);
-    // void write(const std::string &buffer);
+    int write_file(const std::string &buffer);
+
+    void mmap_file(void);
+    void munmap_file(void);
 
     bool fd_error(void) { return ((fd_ < 0) ? true : false); }
 

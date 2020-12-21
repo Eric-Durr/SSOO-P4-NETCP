@@ -5,8 +5,9 @@
 
 struct Message
 {
+    int msg_id = -1;
     std::array<char, 1024> text;
-    std::string file_name;
+    char *file_name[1024];
     size_t file_size;
 };
 
