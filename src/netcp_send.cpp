@@ -57,9 +57,8 @@ int protected_main(int argc, char *argv[])
     Message file_msg;
 
     /* File oppenning */
-    File local_file(argv[1], O_RDONLY);
+    File local_file(argv[1], O_RDWR);
 
-    *file_msg.file_name = static_cast<char *>(argv[1]);
     file_msg.file_size = local_file.length();
 
     /* create socket */
@@ -75,6 +74,7 @@ int protected_main(int argc, char *argv[])
         /* Sending file metadata for creation*/
         if (i == 0)
         {
+            strcpy(file_msg.name.data(), argv[1]);
             my_socket.send_to(file_msg,
                               file_msg.text.size() - 1,
                               exter_sock_addr);

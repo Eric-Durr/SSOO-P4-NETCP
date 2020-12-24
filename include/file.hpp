@@ -12,6 +12,7 @@
 #include <system_error>
 #include <stdexcept>
 #include <string>
+#include <unistd.h>
 
 #define _1KB_ 1024
 #define _2KB_ 2048
@@ -36,8 +37,8 @@ public:
     const void *region(void) const { return mmapped_file_; }
     void *region(void) { return mmapped_file_; }
 
-    const int &length(void) const { return length_; }
-    int &length(void) { return length_; }
+    const int length(void) const { return lseek(fd_, 0, SEEK_END); }
+    int length(void) { return lseek(fd_, 0, SEEK_END); }
 
     void resize(int length);
 

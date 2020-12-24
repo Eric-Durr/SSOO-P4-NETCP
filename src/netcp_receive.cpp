@@ -55,7 +55,8 @@ int protected_main(int argc, char *argv[])
 
         if (file_msg.msg_id == 0)
         {
-            //name.append("_received.txt");
+            name = file_msg.name.data();
+            name.append(".received");
             sz = file_msg.file_size;
         }
         else if (file_msg.msg_id != -2)
@@ -63,8 +64,7 @@ int protected_main(int argc, char *argv[])
             complete_message.append(file_msg.text.data());
         }
     }
-    std::cout << complete_message << std::endl;
-    File received_file("received.txt", O_RDWR | O_CREAT | O_TRUNC, sz);
+    File received_file(name, O_RDWR | O_CREAT | O_TRUNC, sz);
     received_file.write_file(complete_message);
 
     return 0;

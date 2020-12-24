@@ -2,7 +2,7 @@
 
 File::File(const std::string &filename, int flag, int sz)
 {
-    fd_ = open(filename.c_str(), flag);
+    fd_ = open(filename.c_str(), flag, S_IRUSR | S_IWUSR);
 
     if (fd_ < 0)
     {
@@ -29,12 +29,17 @@ File::File(const std::string &filename, int flag, int sz)
     {
         throw std::system_error(errno, std::system_category(), "memory map failed");
     }
+    int result = lockf(fd_, F_LOCK, 0);
+    if (result < 0)
+    {
+        throw std::system_error(errno, std::system_category(), "file can't be locked");
+    }
 }
 
 File::~File()
 {
     munmap(mmapped_file_, length_);
-
+    lockf(fd_, F_ULOCK, 0);
     close(fd_);
 }
 
