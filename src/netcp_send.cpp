@@ -1,4 +1,4 @@
-#include <iostream>
+/* #include <iostream>
 #include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -46,34 +46,26 @@ int protected_main(int argc, char *argv[])
         return 1;
     }
 
-    /* Set addresses */
     sockaddr_in local_sock_addr = make_ip_address(8081, "127.0.0.1");
     sockaddr_in exter_sock_addr = make_ip_address(8080, "127.0.0.1");
 
-    /* Message buffer */
     std::string buffer_str;
     //char *buffer_str[_1KB_];
 
-    /* Message structure */
-
     Message file_msg;
 
-    /* File oppenning */
     File local_file(argv[1], O_RDWR);
 
     file_msg.file_size = local_file.length();
 
-    /* create socket */
     Socket my_socket(local_sock_addr);
 
-    /* Sending memory mapped file content*/
     size_t i = 0;
     while (static_cast<char *>(local_file.region())[i] != '\0')
     {
         file_msg.msg_id = i;
         buffer_str.push_back(static_cast<char *>(local_file.region())[i]);
 
-        /* Sending file metadata for creation*/
         if (i == 0)
         {
             strcpy(file_msg.name.data(), argv[1]);
@@ -98,9 +90,8 @@ int protected_main(int argc, char *argv[])
 
         i++;
     }
-    /* terminate message */
     file_msg.msg_id = -2;
     my_socket.send_to(file_msg, sizeof(file_msg), exter_sock_addr);
 
     return 0;
-}
+} */

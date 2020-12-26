@@ -1,4 +1,4 @@
-#include <iostream>
+/* #include <iostream>
 #include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -68,4 +68,4 @@ int protected_main(int argc, char *argv[])
     received_file.write_file(complete_message);
 
     return 0;
-}
+} */

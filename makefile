@@ -12,8 +12,7 @@ DOCUMENTATION_PATH = docs
 DOXYGEN_CONFIGURATION_FILE_NAME = Doxyfile
 
 # Executable file name 
-SEND_BIN_NAME = netcp_send
-RECEIVE_BIN_NAME = netcp_receive
+BIN_NAME = netcp
 TEST_NAME = netcp_test	
 
 # File extentions
@@ -22,9 +21,8 @@ LIB_EXT = hpp
 
 
 # Source files lists 
-SOURCES_OF_SEND = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(RECEIVE_BIN_NAME)*' ! -iname 'includer.test.cpp' \) | sort -k 1nr | cut -f2-)
-SOURCES_OF_RECEIVE = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(SEND_BIN_NAME)*' ! -iname 'includer.test.cpp' \) | sort -k 1nr | cut -f2-)
-TEST_SOURCES = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(SEND_BIN_NAME)*' ! -iname '$(RECEIVE_BIN_NAME)*' \) | sort -k 1nr | cut -f2-)
+SOURCES= $(shell find . -type f \( -iname '*.$(SRC_EXT)' !  -iname 'includer.test.cpp' \) | sort -k 1nr | cut -f2-)
+TEST_SOURCES = $(shell find . -type f \( -iname '*.$(SRC_EXT)' ! -iname '$(BIN_NAME)*' !  \) | sort -k 1nr | cut -f2-)
 
 # Object files naming
 # OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o) 
@@ -39,7 +37,6 @@ LIBS = catch.h
 
 compile:
 	make send
-	make receive
 
 
 .PHONY: clean
@@ -67,8 +64,5 @@ test:
 	./$(TEST_NAME) 
 
 send:
-	@echo "Making netcp send program: $(SEND_BIN_NAME)"
-	$(CXX) -o $(SEND_BIN_NAME) $(SOURCES_OF_SEND)  $(COMPILE_FLAGS)
-receive:
-	@echo "Making netcp RECEIVE program: $(RECEIVE_BIN_NAME)"
-	$(CXX) -o $(RECEIVE_BIN_NAME) $(SOURCES_OF_RECEIVE) $(COMPILE_FLAGS)
+	@echo "Making netcp program: $(BIN_NAME)"
+	$(CXX) -o $(BIN_NAME) $(SOURCES)  $(COMPILE_FLAGS)
