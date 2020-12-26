@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <exception>
+#include <thread>
 
 //#include "../include/command_line_tools.hpp"
 #include "../include/socket.hpp"
