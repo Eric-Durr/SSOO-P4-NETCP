@@ -49,7 +49,6 @@ int protected_main(int argc, char *argv[])
     /* CLI menu */
     std::string arg;
     std::string action;
-    std::string command = "";
     std::string helpmsg;
     std::cout << "-- NETCP CLI INTERFACE --\n";
     do
@@ -57,7 +56,7 @@ int protected_main(int argc, char *argv[])
         std::cout << "command: ";
         char buff[100];
         std::cin.getline(buff, 100);
-        command = buff;
+        std::string command = buff;
         action = split_str(command)[0];
         arg = split_str(command)[1];
 
@@ -73,7 +72,6 @@ int protected_main(int argc, char *argv[])
         {
             std::cout << "\nA file must be specified as argument to send, try again\n";
         }
-
         if (action == "Receive" && !arg.empty())
         {
             std::cout << "Receiving into " << arg << " directory";
