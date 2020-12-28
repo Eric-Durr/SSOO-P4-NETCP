@@ -11,12 +11,12 @@ Socket::Socket(const sockaddr_in &adress)
                           sizeof(adress));
         if (result < 0)
         {
-            throw std::system_error(errno, std::system_category(), "unable to create socket: ");
+            throw std::system_error(errno, std::system_category(), "unable to create socket");
         }
     }
     else
     {
-        throw std::system_error(errno, std::system_category(), "failed bind : ");
+        throw std::system_error(errno, std::system_category(), "failed bind");
     }
 }
 Socket::~Socket()
@@ -33,7 +33,7 @@ void Socket::send_to(Message &message, const size_t &msg_sz, const sockaddr_in &
                         sizeof(address));
     if (result < 0)
     {
-        throw std::system_error(errno, std::system_category(), "failed sendto: ");
+        throw std::system_error(errno, std::system_category(), "failed sendto");
     }
 }
 
@@ -47,6 +47,6 @@ void Socket::receive_from(Message &message, sockaddr_in &address)
     message.text[result] = '\0';
     if (result < 0)
     {
-        throw std::system_error(errno, std::system_category(), "failed recvfrom: ");
+        throw std::system_error(errno, std::system_category(), "failed recvfrom");
     }
 }
