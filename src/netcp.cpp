@@ -16,6 +16,8 @@ int protected_main(int argc, char *argv[]);
 std::vector<std::string> split_str(std::string str_to_split);
 void send_file(std::exception_ptr &eptr, std::string &filename);
 void send_operations(const std::string &filename);
+void receive_files(std::exception_ptr &eptr, std::string &folder);
+void receive_operations(const std::string &filename);
 // void receive_function(/* --- */);
 
 int main(int argc, char *argv[])
@@ -81,13 +83,22 @@ int protected_main(int argc, char *argv[])
 
         if (action == "Receive" && !arg.empty())
         {
-            std::cout << "\nReceiving into " << arg << " directory";
-            // Thread here
+            std::cout << "\nReceiving into " << arg << " directory\n";
+
+            std::exception_ptr receive_eptr{};
+            std::thread receive_th(&receive_files, std::ref(receive_eptr),
+                                   std::ref(arg));
+
+            receive_th.join();
+            if (receive_eptr)
+            {
+                std::rethrow_exception(receive_eptr);
+            }
         }
 
         if (action == "Send" && !arg.empty())
         {
-            std::cout << "\nSending " << arg << " file";
+            std::cout << "\nSending " << arg << " file\n";
 
             std::exception_ptr send_eptr{};
             std::thread send_th(&send_file, std::ref(send_eptr),
@@ -196,4 +207,50 @@ void send_operations(const std::string &filename)
     }
     file_msg.msg_id = -2;
     my_socket.send_to(file_msg, sizeof(file_msg), exter_sock_addr);
+}
+
+void receive_files(std::exception_ptr &eptr, std::string &folder)
+{
+    try
+    {
+        receive_operations(folder);
+    }
+    catch (...)
+    {
+        eptr = std::current_exception();
+    }
+}
+void receive_operations(const std::string &filename)
+{
+
+    sockaddr_in local_sock_addr = make_ip_address(8080, "127.0.0.1");
+    sockaddr_in exter_sock_addr = make_ip_address(8081, "127.0.0.1");
+
+    Message file_msg;
+
+    Socket my_socket(local_sock_addr);
+
+    std::cout << "Waiting for response ...\n"
+              << std::flush;
+
+    std::string complete_message;
+    std::string name;
+    off_t sz = 0;
+    while (file_msg.msg_id != -2)
+    {
+        my_socket.receive_from(file_msg, exter_sock_addr);
+
+        if (file_msg.msg_id == 0)
+        {
+            name = file_msg.name.data();
+            name.append(".received");
+            sz = file_msg.file_size;
+        }
+        else if (file_msg.msg_id != -2)
+        {
+            complete_message.append(file_msg.text.data());
+        }
+    }
+    File received_file(name, O_RDWR | O_CREAT | O_TRUNC, sz);
+    received_file.write_file(complete_message);
 }
