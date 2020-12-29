@@ -1,8 +1,11 @@
+#include <pthread.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
 #include <atomic>
+#include <algorithm> /*std::find*/
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -19,13 +22,14 @@ std::atomic<bool> quit_send{false};
 std::atomic<bool> quit_receive{false};
 
 // Function declarations
-int protected_main(int argc, char *argv[]);
+int protected_main(void);
 std::vector<std::string> split_str(std::string str_to_split);
 void send_file(std::exception_ptr &eptr, std::string &filename);
 void send_operations(const std::string &filename);
 void receive_files(std::exception_ptr &eptr, std::string &dir);
 void receive_operations(const std::string &dir);
 void cli_menu(std::exception_ptr &main_eptr);
+bool not_a_task(const std::string &action);
 // void receive_function(/* --- */);
 
 int main(int argc, char *argv[])
@@ -34,7 +38,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        return protected_main(argc, argv);
+        return protected_main();
     }
     catch (std::bad_alloc &e)
     {
@@ -55,37 +59,226 @@ int main(int argc, char *argv[])
         return 99;
     }
 }
-int protected_main(int argc, char *argv[])
+int protected_main(void)
 {
     std::exception_ptr main_eptr{};
+
     std::thread pmain_th(&cli_menu, std::ref(main_eptr));
-    pmain_th.join();
+
     if (main_eptr)
     {
         std::rethrow_exception(main_eptr);
     }
-
+    pmain_th.join();
     return 0;
 }
 
-std::vector<std::string> split_str(std::string str_to_split)
+// Main tasks
+
+void cli_menu(std::exception_ptr &main_eptr)
 {
-    std::vector<std::string> result;
-    std::stringstream ss(str_to_split);
-    for (std::string substr; ss >> substr;)
+    try
     {
-        result.push_back(substr);
+        /*Tasks threads*/
+        std::thread send_th;
+        std::thread receive_th;
+
+        /* CLI menu */
+        std::string arg;
+        std::string action;
+        const std::string helpmsg = "\n\n\t\tALLOWED COMMANDS:\n"
+                                    "Send [filename] | send the given file to another socket\n"
+                                    "Receive [folder] | preare the given folder to receive files\n"
+                                    "           (if the folder doesn't exsist a new folder is created)\n"
+                                    "Clear | Clear console.\n"
+                                    "Quit | End the process.\n";
+
+        std::cout << "\n\n-- NETCP CLI INTERFACE --\n";
+        do
+        {
+            // Command parse
+            action = "";
+            arg = "";
+            std::cout << "command: ";
+            char buff[100];
+            std::cin.getline(buff, 100);
+            std::string command = buff;
+            if (!command.empty())
+            {
+                action = split_str(command)[0];
+                arg = split_str(command)[1];
+            }
+
+            // Tasks launch
+            //// Unknown action check
+            if (not_a_task(action) && !command.empty())
+            {
+                std::cout << "\n Unknown command for Netcp, try Help for more info\n\n";
+            }
+            //// Help message
+            if (action == "Help")
+            {
+                std::cout << helpmsg;
+            }
+            //// Errored launch of tasks
+            if (action == "Receive" && arg.empty())
+            {
+                std::cout << "\nReceive needs a directory to store the files, try Help for more info\n";
+            }
+            if (action == "Send" && arg.empty())
+            {
+                std::cout << "\nA file must be specified as argument to send, try Help for more info\n";
+            }
+            //// Receive task launch
+            if (action == "Receive" && !arg.empty())
+            {
+                quit_receive = false;
+                std::cout << "\nReceiving into " << arg << " directory\n";
+
+                std::exception_ptr receive_eptr{};
+                receive_th = std::thread{&receive_files, std::ref(receive_eptr),
+                                         std::ref(arg)};
+                if (receive_eptr)
+                {
+                    std::rethrow_exception(receive_eptr);
+                }
+            }
+            //// Send task launch
+            if (action == "Send" && !arg.empty())
+            {
+                quit_send = false;
+                std::exception_ptr send_eptr{};
+                send_th = std::thread{&send_file, std::ref(send_eptr),
+                                      std::ref(arg)};
+
+                if (send_eptr)
+                {
+                    std::rethrow_exception(send_eptr);
+                }
+            }
+            //// Abort commands
+            if (action == "Abort" && arg.empty())
+            {
+                if (arg.empty())
+                {
+                    quit_send = true;
+                }
+                if (arg == "receive")
+                {
+                    quit_receive = true;
+                    //pthread_kill(receive_th.native_handle(), SIGUSR1);
+                    std::cout << "Aborted file receiving\n";
+                }
+            }
+            //// Return to CLI message
+            if (action != "Quit" && action != "Clear" && !command.empty())
+            {
+                sleep(1);
+                std::cout << "\n\n\tPress enter to continue ...\n";
+                std::getchar();
+            }
+            //// Clear console
+            if (action == "Clear")
+            {
+                system("clear");
+            }
+            //// Quit main task
+            if (action == "Quit")
+            {
+
+                system("clear");
+                quit_receive = true;
+                quit_send = true;
+            }
+
+        } while (action != "Quit");
+
+        receive_th.join();
+        send_th.join();
     }
-    if (result.size() < 2)
+    catch (...)
     {
-        result.push_back("");
+        main_eptr = std::current_exception();
     }
-    if (result.size() > 2)
+}
+
+void receive_files(std::exception_ptr &eptr, std::string &folder)
+{
+    try
     {
-        std::vector<std::string> temp = {result[0], result[1]};
-        result = temp;
+        receive_operations(folder);
     }
-    return result;
+    catch (...)
+    {
+        eptr = std::current_exception();
+    }
+}
+void receive_operations(const std::string &dir)
+{
+    // Open dir
+    int result = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if ((result < 0) && (errno != EEXIST))
+    {
+        throw std::system_error(errno, std::system_category(), "unable to create directory");
+    }
+    else if (errno == EEXIST)
+    {
+    }
+
+    // Search files
+    sockaddr_in local_sock_addr = make_ip_address(8080, "127.0.0.1");
+    sockaddr_in exter_sock_addr = make_ip_address(8081, "127.0.0.1");
+
+    Socket my_socket(local_sock_addr);
+
+    while (true)
+    {
+        if (quit_receive == true)
+        {
+            break;
+        }
+        /* 
+        std::cout << "Waiting for response ...\n"
+                  << std::flush;
+
+        Message file_msg;
+
+        std::string complete_message;
+        std::string name;
+        int sz = 0;
+
+        my_socket.receive_from(file_msg, exter_sock_addr);
+
+        if (file_msg.msg_id == 0)
+        {
+            name = file_msg.name.data();
+            name.append(".received");
+            sz = file_msg.file_size;
+        }
+        File received_file(dir + "/" + name,
+                           O_RDWR | O_CREAT | O_TRUNC, sz);
+
+        while (file_msg.msg_id != -2)
+        {
+
+            if (quit_receive == true)
+            {
+                system("clear");
+                std::cout << "\nAborted file sending\n";
+                return;
+            }
+            my_socket.receive_from(file_msg, exter_sock_addr);
+
+            if (file_msg.msg_id != -2 && file_msg.msg_id != 0)
+            {
+                complete_message.append(file_msg.text.data());
+
+                received_file.write_file(complete_message);
+            }
+        }
+        std::cout << "Received " << name << ", stored in " << dir << "\n";
+         */
+    }
 }
 
 void send_file(std::exception_ptr &eptr, std::string &filename)
@@ -99,14 +292,12 @@ void send_file(std::exception_ptr &eptr, std::string &filename)
         eptr = std::current_exception();
     }
 }
-
 void send_operations(const std::string &filename)
 {
     sockaddr_in local_sock_addr = make_ip_address(8081, "127.0.0.1");
     sockaddr_in exter_sock_addr = make_ip_address(8080, "127.0.0.1");
 
     std::string buffer_str;
-    //char *buffer_str[_1KB_];
 
     Message file_msg;
 
@@ -145,7 +336,7 @@ void send_operations(const std::string &filename)
         }
 
         i++;
-        sleep(5);
+        // sleep(2);
         if (quit_send == true)
         {
             system("clear");
@@ -159,180 +350,37 @@ void send_operations(const std::string &filename)
     std::cout << "\nFile " << filename << " has been sent\n";
 }
 
-void receive_files(std::exception_ptr &eptr, std::string &folder)
+// Menu tools
+bool not_a_task(const std::string &action)
 {
-    try
-    {
-        receive_operations(folder);
-    }
-    catch (...)
-    {
-        eptr = std::current_exception();
-    }
-}
-void receive_operations(const std::string &dir)
-{
-    // Open dir
-    int result = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    if ((result < 0) && (errno != EEXIST))
-    {
-        throw std::system_error(errno, std::system_category(), "unable to create directory");
-    }
-    else if (errno == EEXIST)
-    {
-    }
+    std::vector<std::string> acc_actions =
+        {"Help",
+         "Receive",
+         "Send",
+         "Quit",
+         "Abort",
+         "Pause",
+         "Resume"};
 
-    // Search files
-    sockaddr_in local_sock_addr = make_ip_address(8080, "127.0.0.1");
-    sockaddr_in exter_sock_addr = make_ip_address(8081, "127.0.0.1");
-
-    Socket my_socket(local_sock_addr);
-
-    while (1)
-    {
-        std::cout << "Waiting for response ...\n"
-                  << std::flush;
-
-        Message file_msg;
-
-        std::string complete_message;
-        std::string name;
-        off_t sz = 0;
-        while (file_msg.msg_id != -2)
-        {
-            if (quit_receive == true)
-            {
-                system("clear");
-                std::cout << "\nAborted file sending\n";
-                return;
-            }
-            my_socket.receive_from(file_msg, exter_sock_addr);
-
-            if (file_msg.msg_id == 0)
-            {
-                name = file_msg.name.data();
-                name.append(".received");
-                sz = file_msg.file_size;
-            }
-            else if (file_msg.msg_id != -2)
-            {
-                complete_message.append(file_msg.text.data());
-            }
-        }
-        File received_file(dir + "/" + name, O_RDWR | O_CREAT | O_TRUNC, sz);
-        received_file.write_file(complete_message);
-        std::cout << "Received " << name << ", stored in " << dir << "\n";
-    }
+    return !(std::find(acc_actions.begin(), acc_actions.end(), action) != acc_actions.end());
 }
 
-void cli_menu(std::exception_ptr &main_eptr)
+std::vector<std::string> split_str(std::string str_to_split)
 {
-    try
+    std::vector<std::string> result;
+    std::stringstream ss(str_to_split);
+    for (std::string substr; ss >> substr;)
     {
-        /*Useful  threads*/
-        std::thread send_th;
-        std::thread receive_th;
-
-        /* CLI menu */
-        std::string arg;
-        std::string action;
-        const std::string helpmsg = "\n\n\t\tALLOWED COMMANDS:\n"
-                                    "Send [filename] | send the given file to another socket\n"
-                                    "Receive [folder] | preare the given folder to receive files\n"
-                                    "           (if the folder doesn't exsist a new folder is created)\n"
-                                    "Clear | Clear console.\n"
-                                    "Quit | End the process.\n";
-
-        std::cout << "\n\n-- NETCP CLI INTERFACE --\n";
-        do
-        {
-            std::cout << "command: ";
-            char buff[100];
-            std::cin.getline(buff, 100);
-
-            std::string command = buff;
-            if (!split_str(command).empty())
-            {
-                action = split_str(command)[0];
-                arg = split_str(command)[1];
-            }
-
-            if (action == "Help")
-            {
-                std::cout << helpmsg;
-            }
-
-            if (action == "Receive" && arg.empty())
-            {
-                std::cout << "\nReceive needs a directory to store the files, try Help for more info\n";
-            }
-            if (action == "Send" && arg.empty())
-            {
-                std::cout << "\nA file must be specified as argument to send, try Help for more info\n";
-            }
-
-            if (action == "Receive" && !arg.empty())
-            {
-                quit_receive = false;
-                std::cout << "\nReceiving into " << arg << " directory\n";
-
-                std::exception_ptr receive_eptr{};
-                receive_th = std::thread{&receive_files, std::ref(receive_eptr),
-                                         std::ref(arg)};
-
-                if (receive_eptr)
-                {
-                    std::rethrow_exception(receive_eptr);
-                }
-            }
-
-            if (action == "Send" && !arg.empty())
-            {
-                quit_send = false;
-                std::exception_ptr send_eptr{};
-                send_th = std::thread{&send_file, std::ref(send_eptr),
-                                      std::ref(arg)};
-
-                if (send_eptr)
-                {
-                    std::rethrow_exception(send_eptr);
-                }
-            }
-
-            if (action == "Abort" && arg.empty())
-            {
-                quit_send = true;
-
-                send_th.join();
-            }
-            if (action == "Abort" && arg == "receive")
-            {
-                quit_receive = true;
-            }
-
-            if (action != "Quit" && action != "Clear")
-            {
-                std::cout << "\n\n\tPress enter to continue ...\n";
-                std::getchar();
-            }
-            if (action == "Clear")
-            {
-                system("clear");
-            }
-            if (action == "Quit")
-            {
-                quit_receive = true;
-                quit_send = true;
-
-                system("clear");
-            }
-
-        } while (action != "Quit");
-
-        send_th.join();
+        result.push_back(substr);
     }
-    catch (...)
+    if (result.size() < 2)
     {
-        main_eptr = std::current_exception();
+        result.push_back("");
     }
+    if (result.size() > 2)
+    {
+        std::vector<std::string> temp = {result[0], result[1]};
+        result = temp;
+    }
+    return result;
 }
